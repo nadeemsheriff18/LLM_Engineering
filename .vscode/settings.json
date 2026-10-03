@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./llm_engineering/week1/community-contributions/ag-w1d2-use-local-ollama-with-"
+    ]
+}

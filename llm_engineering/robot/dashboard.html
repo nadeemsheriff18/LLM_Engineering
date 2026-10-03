@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AquaScan Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #080e10; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  </style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const API = "http://localhost:5050";
+
+function Dashboard() {
+  const [stats, setStats] = useState({
+  fps: 0,
+  debris_count: 0,
+  total_detections: 0,
+  last_labels: [],
+  ph: 7.0,
+  turbidity: 10,
+  temperature: 25
+});
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API}/stats`);
+        const data = await res.json();
+        setStats(data);
+      } catch (e) {}
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#080e10",
+      color: "#e8f4f0",
+      fontFamily: "'DM Mono', monospace",
+      padding: "20px"
+    }}>
+
+      {/* Header */}
+      <h1 style={{
+        fontFamily: "'Syne', sans-serif",
+        marginBottom: "20px"
+      }}>
+        AQUA<span style={{ color: "#22d3a5" }}>SCAN</span>
+      </h1>
+
+      <div style={{
+  display: "grid",
+  gridTemplateColumns: "2fr 1fr",
+  gap: "20px"
+}}>
+
+  
+  <div style={{
+    border: "1px solid rgba(34,211,165,0.2)",
+    borderRadius: "10px",
+    overflow: "hidden",
+    height: "400px"
+  }}>
+    <img
+      src={`${API}/video`}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover"
+      }}
+    />
+  </div>
+
+  
+  <div style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px"
+  }}>
+
+    <div style={cardStyle}>
+      <div>FPS</div>
+      <h2>{stats.fps}</h2>
+    </div>
+
+    <div style={cardStyle}>
+      <div>Debris</div>
+      <h2>{stats.debris_count}</h2>
+    </div>
+
+    <div style={cardStyle}>
+      <div>Total</div>
+      <h2>{stats.total_detections}</h2>
+    </div>
+
+    <div style={cardStyle}>
+  <div>pH Level</div>
+  <h2>{stats.ph}</h2>
+</div>
+
+<div style={cardStyle}>
+  <div>Turbidity</div>
+  <h2>{stats.turbidity}</h2>
+</div>
+
+<div style={cardStyle}>
+  <div>Temperature</div>
+  <h2>{stats.temperature}°C</h2>
+</div>
+
+<div style={{
+  ...cardStyle,
+  border: "1px solid rgba(255,0,0,0.2)"
+}}>
+  <div>Status</div>
+  <h2 style={{
+    color:
+      stats.ph < 6.5 || stats.ph > 8.5
+        ? "#ef4444"
+        : stats.turbidity > 50
+        ? "#f59e0b"
+        : "#22d3a5"
+  }}>
+    {
+      stats.ph < 6.5 || stats.ph > 8.5
+        ? "ACIDIC/UNSAFE"
+        : stats.turbidity > 50
+        ? "POLLUTED"
+        : "SAFE"
+    }
+  </h2>
+</div>
+
+  </div>
+
+</div>
+      {/* Labels */}
+      <div style={{
+        marginTop: "20px",
+        padding: "10px",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: "8px"
+      }}>
+        <div style={{ marginBottom: "10px" }}>Last Detected:</div>
+
+        {stats.last_labels.length > 0 ? (
+          stats.last_labels.map((l, i) => (
+            <span key={i} style={{
+              marginRight: "8px",
+              padding: "5px 10px",
+              background: "#f59e0b33",
+              borderRadius: "5px"
+            }}>
+              {l}
+            </span>
+          ))
+        ) : (
+          <div style={{ opacity: 0.5 }}>No objects</div>
+        )}
+      </div>
+
+    </div>
+  );
+}
+
+const cardStyle = {
+  background: "rgba(255,255,255,0.05)",
+  padding: "15px",
+  borderRadius: "10px",
+  minWidth: "150px"
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<Dashboard />);
+</script>
+
+</body>
+</html>
